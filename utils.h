@@ -43,6 +43,7 @@ typedef struct {
 typedef enum {
   SPECIES_BASIC_FISH,
   SPECIES_ANIM_FISH,
+  SPECIES_WIDE_FISH,
   SPECIES_MAX 
 } speciesID;
 
@@ -62,10 +63,11 @@ typedef struct {
   unsigned int curFrame;
   Direction direction; // OF DRAWING, NOT MOVEMENT
   int dx, dy;
+  uint16_t colorAttr; // color attribute for this fish
   unsigned int frameCounter; // to control animation speed?
   unsigned int frameDelay; // frames to wait before advancing animation
-  unsigned int bounceCount;
-  unsigned int wrapCount;
+  int bounceCount;
+  int wrap; // 0 no, 1 = yes
   
 } Fish;
 

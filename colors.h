@@ -38,6 +38,7 @@ typedef enum {
 #define DEFAULT_COLOR_STATE  (COLOR_WHITE & FG_MASK)
 // green text, white bkgd, no Attributes
 #define ALT_DEFAULT_COLOR_STATE  ((COLOR_WHITE << 4) & BG_MASK | (COLOR_GREEN & FG_MASK))
+#define DEFAULT_GREEN ((COLOR_GREEN & FG_MASK))
 
 
 //sets fg

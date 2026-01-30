@@ -17,8 +17,8 @@ void cleanupTermCntxt(termContext* ctx) {
 
 fishTemplate species_library[SPECIES_MAX] = {
   [SPECIES_BASIC_FISH] = { .species_name = "Basic Fish", .width = 6, .height = 1, .numFrames = 1, .animated = false, .frames = (const char **)basic_fish_anim },
-  [SPECIES_ANIM_FISH]  = { .species_name = "Animated Fish", .width = 6, .height = 1, .numFrames = 3, .animated = true, .frames = (const char **)anim_fish_anim }
-
+  [SPECIES_ANIM_FISH]  = { .species_name = "Animated Fish", .width = 6, .height = 1, .numFrames = 3, .animated = true, .frames = (const char **)anim_fish_anim },
+ [SPECIES_WIDE_FISH]  = { .species_name = "Wide Fish", .width = 4, .height = 4, .numFrames = 1, .animated = false, .frames = (const char **)wide_fish_anim }
 };
 
 termContext* initTermCntxt() {
@@ -43,12 +43,13 @@ termContext* initTermCntxt() {
     ctx->aquarium->inhabitants[i].y = 0;
     ctx->aquarium->inhabitants[i].curFrame = 0;
     ctx->aquarium->inhabitants[i].direction = DIR_RIGHT;
+    ctx->aquarium->inhabitants[i].colorAttr = DEFAULT_COLOR_STATE;
     ctx->aquarium->inhabitants[i].dx = 0;
     ctx->aquarium->inhabitants[i].dy = 0;
     ctx->aquarium->inhabitants[i].frameCounter = 0;
     ctx->aquarium->inhabitants[i].frameDelay = 0; 
     ctx->aquarium->inhabitants[i].bounceCount = 0;
-    ctx->aquarium->inhabitants[i].wrapCount = 0;
+    ctx->aquarium->inhabitants[i].wrap = 0;
   }
   buffEmptyHelper(ctx, false);
   buffEmptyHelper(ctx, true);
@@ -84,21 +85,45 @@ void writeFishToBuffer(termContext* ctx, Fish* fish){
   char* frame = fish->template->frames[fish->curFrame];
   int bottomY = startY + fish->template->height;
   int rightX = startX + fish->template->width;
-  // printf(" Fish frame bounding box: TopLeft(%d, %d) BottomRight(%d, %d)\n", startX, startY, rightX, bottomY);
+  uint16_t colorAttr = fish->colorAttr;
+  // check if we need to reverse fish direction, and inverse the frame by chunks of Width
+  // printf(" Fish frame bounding box: TopLeft(%d, %d) 
+        // BottomRight(%d, %d)\n", startX, startY, rightX, bottomY);
   // printf(" Fish frame data: \n");
   // printf("%s\n", frame);
   // usleep(1000000);
+  //handle wrap by determining how much fish is out of bounds on a side (in the direction of motion)
+  // and drawing that part on the opposite side
+  // wrap logic
+
   for(int row = 0; row < fish->template->height; row++){
     for(int col = 0; col < fish->template->width; col++){
       int drawX = startX + col;
       int drawY = startY + row;
       // boundary check
       if(drawX < 0 || drawX >= ctx->width || drawY < 0 || drawY >= ctx->height){
-        continue; // skip drawing out of bounds
+        if(fish->wrap == 1){
+          // handle wrap
+          if(drawX < 0){
+            drawX = ctx->width + drawX; // wrap to right side
+          }
+          else if(drawX >= ctx->width){
+            drawX = drawX - ctx->width; // wrap to left side
+          }
+          if(drawY < 0){
+            drawY = ctx->height + drawY; // wrap to bottom
+          }
+          else if(drawY >= ctx->height){
+            drawY = drawY - ctx->height; // wrap to top
+          }
+        }
+        else{
+          continue; // skip drawing out of bounds
+        }
       }
       unsigned int index = drawY * ctx->width + drawX;
       ctx->nextBuffer[index].ch = frame[row * fish->template->width + col];
-      ctx->nextBuffer[index].colState = ALT_DEFAULT_COLOR_STATE; // green fish
+      ctx->nextBuffer[index].colState = colorAttr ; // green fish
       ctx->nextBuffer[index].dirty = true; // mark as dirty for redraw
     }
   }
@@ -153,38 +178,53 @@ void updateStep(termContext* ctx) {
 }
 
 //TODO ALL PLACEHOLDER. DO DIRTY CHECK OPTIMIZATION!!
-void drawBuffer(termContext* ctx) {
-
+void drawBuffer(termContext* ctx) { 
+  uint16_t last_attr = 0xFFFF; // invalid initial value to force first color set
   //iterate and only draw dirty cells, otherwise skip
   for (unsigned int row = 0; row < ctx->height; row++) {
     for (unsigned int col = 0; col < ctx->width; col++) {
-      unsigned int index = row * ctx->width + col;
-      if (ctx->nextBuffer[index].dirty || ctx->dbug_ForceFullRedraw) {
-        setCursorPosition(row + 1, col + 1); // terminal is 1-indexed
-        applyAttrib(ctx->nextBuffer[index].colState);
-        putchar(ctx->nextBuffer[index].ch);
-        ctx->nextBuffer[index].dirty = false; // reset dirty flag
+      unsigned int idx = row * ctx->width + col;
+
+      cell *next = &ctx->nextBuffer[idx];
+      cell *live = &ctx->liveBuffer[idx];
+
+      // Only draw if the character OR the color changed
+      if (next->ch != live->ch || next->colState != live->colState || ctx->dbug_ForceFullRedraw) {
+
+        setCursorPosition(row + 1, col + 1);
+
+        // Optimization: only update color if it's different from the PREVIOUS cell
+        if (next->colState != last_attr) {
+          applyAttrib(next->colState);
+          last_attr = next->colState;
+        }
+
+        putchar(next->ch);
+
+        // Sync: Now the live buffer matches what we just printed
+        *live = *next;
       }
     }
   }
-  ctx->dbug_ForceFullRedraw = false; // reset full redraw flag
+  ctx->dbug_ForceFullRedraw = false;
+  setCursorPosition(0, 0);
   fflush(stdout);
-  
-  // // for now, just print the nextBuffer to the terminal
-  // setCursorPosition(0, 0);
-  // for (unsigned int row = 0; row < ctx->height; row++) {
-  //   for (unsigned int col = 0; col < ctx->width; col++) {
-  //     unsigned int index = row * ctx->width + col;
-  //     // use the color State
-  //     applyAttrib(ctx->nextBuffer[index].colState);
-  //     putchar(ctx->nextBuffer[index].ch);
-  //   }
-  //   putchar('\n');
-  // }
-  // // memcpy nextBuffer to liveBuffer, 
-  // memcpy(ctx->liveBuffer, ctx->nextBuffer, ctx->width * ctx->height * sizeof(cell));
-  // usleep(500000); // sleep for 5ms to reduce flicker
-  // fflush(stdout);
+
+// // for now, just print the nextBuffer to the terminal
+// setCursorPosition(0, 0);
+// for (unsigned int row = 0; row < ctx->height; row++) {
+//   for (unsigned int col = 0; col < ctx->width; col++) {
+//     unsigned int index = row * ctx->width + col;
+//     // use the color State
+//     applyAttrib(ctx->nextBuffer[index].colState);
+//     putchar(ctx->nextBuffer[index].ch);
+//   }
+//   putchar('\n');
+// }
+// // memcpy nextBuffer to liveBuffer, 
+// memcpy(ctx->liveBuffer, ctx->nextBuffer, ctx->width * ctx->height * sizeof(cell));
+// usleep(500000); // sleep for 5ms to reduce flicker
+// fflush(stdout);
 }
 
 void dbug_printTermCntxt(termContext* ctx){
@@ -229,5 +269,8 @@ void dbug_fishState(Fish* fish){
   printf("  Frame Counter: %d\n", fish->frameCounter);
   printf("  Frame Delay: %d\n", fish->frameDelay);
   printf("  Bounce Count: %d\n", fish->bounceCount);
-  printf("  Wrap Count: %d\n", fish->wrapCount);
+  printf("  Wraping?: %d\n", fish->wrap);
+  applyAttrib(fish->colorAttr);
+  printf("  Color Attribute: 0x%04X\n", fish->colorAttr);
+  applyAttrib(DEFAULT_COLOR_STATE); // reset to default after printing
 }
