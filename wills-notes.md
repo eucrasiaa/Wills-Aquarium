@@ -79,3 +79,5 @@ update cycle:
         - Swap pointers of nextBuffer and liveBuffer
     5. Repeat for next frame
 
+
+# todo: see readme for working updates

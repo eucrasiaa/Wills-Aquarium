@@ -44,12 +44,15 @@ typedef enum {
   SPECIES_BASIC_FISH,
   SPECIES_ANIM_FISH,
   SPECIES_WIDE_FISH,
+  SPECIES_BUBBLE,
   SPECIES_MAX 
 } speciesID;
 
 extern fishTemplate species_library[SPECIES_MAX];
-
-
+//
+// extern fishTemplate *species_library;
+// bool load_species_library(const char *filename);
+// void free_species_library();
 
 // proper direction enum in a c-way:
 typedef enum {
@@ -77,8 +80,8 @@ typedef struct {
     //other inhabs + count 
 } Aquarium;
 typedef struct {
-  unsigned int width;
-  unsigned int height;
+  int width;
+  int height;
   cell *nextBuffer;
   cell *liveBuffer;
   bool running;

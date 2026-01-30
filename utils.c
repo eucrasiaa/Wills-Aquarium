@@ -1,6 +1,8 @@
 #include "utils.h"
 #include <string.h>
 
+
+// fishTemplate *species_library = NULL;
 void setCursorPosition(int row, int col){
   printf(A_ESC "%d;%dH", row, col);
   fflush(stdout);
@@ -18,7 +20,8 @@ void cleanupTermCntxt(termContext* ctx) {
 fishTemplate species_library[SPECIES_MAX] = {
   [SPECIES_BASIC_FISH] = { .species_name = "Basic Fish", .width = 6, .height = 1, .numFrames = 1, .animated = false, .frames = (const char **)basic_fish_anim },
   [SPECIES_ANIM_FISH]  = { .species_name = "Animated Fish", .width = 6, .height = 1, .numFrames = 3, .animated = true, .frames = (const char **)anim_fish_anim },
- [SPECIES_WIDE_FISH]  = { .species_name = "Wide Fish", .width = 4, .height = 4, .numFrames = 1, .animated = false, .frames = (const char **)wide_fish_anim }
+ [SPECIES_WIDE_FISH]  = { .species_name = "Wide Fish", .width = 4, .height = 4, .numFrames = 1, .animated = false, .frames = (const char **)wide_fish_anim },
+  [SPECIES_BUBBLE]    = { .species_name = "Bubble", .width = 3, .height = 1, .numFrames = 5, .animated = true, .frames = (const char **)bubble_anim }
 };
 
 termContext* initTermCntxt() {
@@ -103,6 +106,7 @@ void writeFishToBuffer(termContext* ctx, Fish* fish){
       // boundary check
       if(drawX < 0 || drawX >= ctx->width || drawY < 0 || drawY >= ctx->height){
         if(fish->wrap >= 1){
+          printf(" Fish %s wrapping at (%d, %d)\n", fish->template->species_name, drawX, drawY);
           // handle wrap
           if(drawX < 0){
             drawX = ctx->width + drawX; // wrap to right side
@@ -121,11 +125,21 @@ void writeFishToBuffer(termContext* ctx, Fish* fish){
           continue; // skip drawing out of bounds
         }
       }
+
+
       unsigned int index = drawY * ctx->width + drawX;
+      
       ctx->nextBuffer[index].ch = frame[row * fish->template->width + col];
       ctx->nextBuffer[index].colState = colorAttr ; // green fish
       ctx->nextBuffer[index].dirty = true; // mark as dirty for redraw
     }
+  }
+  //check if we are fully negative on x or y, and if so set to equivilent positive so wrapping doesnt just send us into the negatives
+  if(fish->x < -fish->template->width){
+    fish->x = ctx->width + (fish->x % ctx->width);
+  }
+  if(fish->y < -fish->template->height){
+    fish->y = ctx->height + (fish->y % ctx->height);
   }
   //why is this printing jibberish?
   // its because frame is a pointer to a string, need to dereference it

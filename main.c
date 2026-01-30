@@ -48,7 +48,22 @@ int main(){
   ctx->aquarium->inhabitants[2].colorAttr = set_fg(DEFAULT_COLOR_STATE, COLOR_CYAN);
   ctx->aquarium->inhabitants[1].colorAttr = set_fg(DEFAULT_COLOR_STATE, COLOR_YELLOW);
   ctx->aquarium->inhabitants[0].colorAttr = set_fg(DEFAULT_COLOR_STATE, COLOR_MAGENTA);
-  
+ 
+
+  // add 5 blue bubbles floating upwards
+  for(int i =3; i<8; i++){
+    ctx->aquarium->inhabitants[i].template = &species_library[SPECIES_BUBBLE];
+    ctx->aquarium->inhabitants[i].x = 5 + i * 10;
+    ctx->aquarium->inhabitants[i].y = ctx->height - 2; // start near bottom
+    ctx->aquarium->inhabitants[i].curFrame = 0;
+    ctx->aquarium->inhabitants[i].direction = DIR_RIGHT; // direction doesn't matter for bubbles
+    ctx->aquarium->inhabitants[i].dx = 0;
+    ctx->aquarium->inhabitants[i].dy = -1; // move upwards
+    ctx->aquarium->inhabitants[i].frameDelay = 3; // moderate animation speed
+    ctx->aquarium->inhabitants[i].colorAttr = set_fg(DEFAULT_COLOR_STATE, COLOR_BLUE);
+    ctx->aquarium->inhabitants[i].wrap = 1;
+    ctx->aquarium->fishCount++;
+  }
 
 
 

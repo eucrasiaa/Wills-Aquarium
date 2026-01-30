@@ -20,3 +20,12 @@ static const char *basic_fish_anim[] = { BASIC_FISH_F1 };
 
 #define WIDE_FISH_F1 "  /  /\\/ \\/\\  \\   "
 static const char *wide_fish_anim[] = { WIDE_FISH_F1 };
+
+#define BUBBLE_F1 " o "
+#define BUBBLE_F2 " o "
+#define BUBBLE_F3 "o  "
+#define BUBBLE_F4 " o "
+#define BUBBLE_F5 "  o"
+
+
+static const char *bubble_anim[] = { BUBBLE_F1, BUBBLE_F2, BUBBLE_F3, BUBBLE_F4, BUBBLE_F5 };
