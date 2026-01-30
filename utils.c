@@ -102,7 +102,7 @@ void writeFishToBuffer(termContext* ctx, Fish* fish){
       int drawY = startY + row;
       // boundary check
       if(drawX < 0 || drawX >= ctx->width || drawY < 0 || drawY >= ctx->height){
-        if(fish->wrap == 1){
+        if(fish->wrap >= 1){
           // handle wrap
           if(drawX < 0){
             drawX = ctx->width + drawX; // wrap to right side
