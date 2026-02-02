@@ -28,8 +28,9 @@ typedef enum {
     COLOR_BRIGHT_MAGENTA,
     COLOR_BRIGHT_CYAN,
     COLOR_BRIGHT_WHITE,
-    COLOR_RESET,
+
     COLOR_COUNT,  // i quite like this trick as you'll see :3
+    COLOR_RESET,
     COLOR_DEFAULT = 9    // Standard terminal default
 } ColorID;
 

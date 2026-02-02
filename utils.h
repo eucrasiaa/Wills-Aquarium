@@ -101,6 +101,7 @@ void dbug_fishState(Fish* fish);
 
 
 
+unsigned int findEmptyFishSlot(Aquarium* aq);
 
 void writeFishToBuffer(termContext* ctx, Fish* fish);
 void writeFishHelper(termContext* ctx);
@@ -111,3 +112,6 @@ void updateStep(termContext* ctx);
 
 void drawBuffer(termContext* ctx);
 // terminal context
+//
+void createRandomFish(termContext* ctx);
+void addRandomFish(termContext* ctx);

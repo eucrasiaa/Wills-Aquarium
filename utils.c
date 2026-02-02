@@ -56,6 +56,8 @@ termContext* initTermCntxt() {
   }
   buffEmptyHelper(ctx, false);
   buffEmptyHelper(ctx, true);
+  // seed random
+  srand((unsigned int)time(NULL));
   return ctx;
 }
 
@@ -287,4 +289,48 @@ void dbug_fishState(Fish* fish){
   applyAttrib(fish->colorAttr);
   printf("  Color Attribute: 0x%04X\n", fish->colorAttr);
   applyAttrib(DEFAULT_COLOR_STATE); // reset to default after printing
+}
+
+unsigned int findEmptyFishSlot(Aquarium* aq){
+  for(unsigned int i = 0; i < MAX_FISH; i++){
+    if(aq->inhabitants[i].template == NULL){
+      return i;
+    }
+  }
+  return MAX_FISH; // no empty slot found
+}
+
+//internal
+void createRandomFish(termContext* ctx){
+  int a = rand() % SPECIES_MAX;
+  printf(" Creating random fish of species ID: %d\n", a);
+  unsigned int slot = findEmptyFishSlot(ctx->aquarium);
+  if(slot == MAX_FISH){
+    printf(" No empty fish slot available!\n");
+    return;
+  }
+  // randoms:
+  // TODO attempt to check current fish, and on one pass attempt to avoid overlap on Y axis, but still allow it
+  int startX = rand() % ctx->width;
+  int startY = rand() % ctx->height;
+  int direction = rand() % 2; // 0 = right, 1 = left
+  int speed = (rand() % 3) + 1; // speed between 1 and 3  
+  int color = rand() % COLOR_COUNT; // random color
+  //initialize fish at slot
+  ctx->aquarium->inhabitants[slot].template = &species_library[a];
+  ctx->aquarium->inhabitants[slot].x = startX;
+  ctx->aquarium->inhabitants[slot].y = startY;
+  ctx->aquarium->inhabitants[slot].curFrame = 0;
+  ctx->aquarium->inhabitants[slot].direction = (direction == 0) ? DIR_RIGHT : DIR_LEFT;
+  ctx->aquarium->inhabitants[slot].colorAttr = set_fg(DEFAULT_COLOR_STATE, (color % COLOR_COUNT));
+  ctx->aquarium->inhabitants[slot].dx = -1;
+  ctx->aquarium->inhabitants[slot].dy = 0;
+  ctx->aquarium->fishCount++;
+  ctx->aquarium->inhabitants[slot].wrap = 1; 
+  return;
+}
+
+// external
+void addRandomFish(termContext* ctx){
+  createRandomFish(ctx);
 }

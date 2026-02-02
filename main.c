@@ -66,8 +66,9 @@ int main(){
   }
 
 
-
+  
   dbug_printTermCntxt(ctx);
+  createRandomFish(ctx);
   usleep(1500000); // 2s pause before starting main loop
   wSetTermClear();
   while(ctx->running){
