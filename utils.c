@@ -311,11 +311,16 @@ void createRandomFish(termContext* ctx){
   }
   // randoms:
   // TODO attempt to check current fish, and on one pass attempt to avoid overlap on Y axis, but still allow it
+  // TODO diff fish types should have speed range based on the included file (allow as an optional param?)
+  //    else, fallback to just a default -2 - 2 (but not 0) speed range
   int startX = rand() % ctx->width;
   int startY = rand() % ctx->height;
   int direction = rand() % 2; // 0 = right, 1 = left
   int speed = (rand() % 3) + 1; // speed between 1 and 3  
   int color = rand() % COLOR_COUNT; // random color
+   if(direction == 1){
+      speed = -speed; // move left
+    }  
   //initialize fish at slot
   ctx->aquarium->inhabitants[slot].template = &species_library[a];
   ctx->aquarium->inhabitants[slot].x = startX;
@@ -323,7 +328,7 @@ void createRandomFish(termContext* ctx){
   ctx->aquarium->inhabitants[slot].curFrame = 0;
   ctx->aquarium->inhabitants[slot].direction = (direction == 0) ? DIR_RIGHT : DIR_LEFT;
   ctx->aquarium->inhabitants[slot].colorAttr = set_fg(DEFAULT_COLOR_STATE, (color % COLOR_COUNT));
-  ctx->aquarium->inhabitants[slot].dx = -1;
+  ctx->aquarium->inhabitants[slot].dx = speed;
   ctx->aquarium->inhabitants[slot].dy = 0;
   ctx->aquarium->fishCount++;
   ctx->aquarium->inhabitants[slot].wrap = 1; 

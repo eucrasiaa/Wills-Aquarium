@@ -81,3 +81,7 @@ update cycle:
 
 
 # todo: see readme for working updates
+
+# updating fish loading sequence:
+1. rework loading to come from a local file (cut art.h and just load in)
+    - 1a.  will need to create a format & parser struct
